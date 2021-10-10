@@ -7,9 +7,11 @@ var app = builder.Build();
 app.MapGet("/", () => "Hello World!");
 app.MapPost("/send", (Message message) =>
 {
-    Request.SendMessage(message);
-    return message;
-});
+    Response response = Request.SendMessage(message);
+    if (response != null && !response.Error) return Results.Ok(response.Message);
+
+    return Results.BadRequest(response);
+}).Produces<Response>();
 
 app.Run();
 
@@ -18,25 +20,28 @@ public class Message
     private static readonly HttpClient _client = new HttpClient();
     public string Text { get; set; }
     public string WebHookUrl { get; set; }
+    public string Username { get; set; }
+    public string Channel { get; set; }
 }
 
 public static class Request
 {
     private static readonly HttpClient _client = new HttpClient();
     private const string MEDIATYPE = "application/json";
-    public static string SendMessage(Message message)
+    public static Response SendMessage(Message message)
     {
         Uri webHookUri;
         if (!Uri.TryCreate(message.WebHookUrl, UriKind.RelativeOrAbsolute, out webHookUri))
-            return "error"; //new Response(true, "");
+            return new Response(true, "You must send a valid url to the WebHookUrl!"); 
 
         using (var request = new HttpRequestMessage(HttpMethod.Post, message.WebHookUrl))
         {
-            var requestBody = JsonSerializer.Serialize(new { text = "test 123", username = "Username", response_type = "ephemeral", channel = "messages" });
+            var requestBody = JsonSerializer.Serialize(new { text = message.Text, username = message.Username, response_type = "ephemeral", channel = message.Channel });
             request.Content = new StringContent(requestBody, Encoding.UTF8, MEDIATYPE);
             var response = _client.SendAsync(request).GetAwaiter().GetResult();
             var responseString = response.Content.ReadAsStringAsync();
-            return responseString.Result;
+
+            return new Response(!responseString.IsCompletedSuccessfully, responseString.Result);
         }
     }
 }
