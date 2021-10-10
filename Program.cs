@@ -4,7 +4,7 @@ using System.Text.Json;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+app.MapGet("/", () => "Welcome to SendSlackMessage - The Minimal Api from dotnet 6!");
 app.MapPost("/send", (Message message) =>
 {
     Response response = Request.SendMessage(message);
