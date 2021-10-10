@@ -1,0 +1,13 @@
+version: "3.4" # This a version from docker-compose.yml, see more into the https://docs.docker.com/compose/compose-file/
+
+services:
+  minimalapi_sendslackmessage_imageheroku:
+    container_name: minimalapi_sendslackmessage_containerheroku
+    image: minimalapi_sendslackmessage_imageheroku
+    environment:
+      - PORT=5000
+    ports:
+      - 5000:5000
+    build:
+      context: .
+      dockerfile: Dockerfile
