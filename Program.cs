@@ -4,7 +4,14 @@ using System.Text.Json;
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-app.MapGet("/", () => "Welcome to SendSlackMessage - The Minimal Api from dotnet 6!");
+app.MapGet("/", (IConfiguration Configuration) =>
+{
+    return new { 
+        Message = "Welcome to SendSlackMessage - The Minimal Api from dotnet 6!", 
+        OSDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
+        Test = Configuration["test"]
+    };
+});
 app.MapPost("/send", (Message message) =>
 {
     Response response = Request.SendMessage(message);
@@ -17,7 +24,6 @@ app.Run();
 
 public class Message
 {
-    private static readonly HttpClient _client = new HttpClient();
     public string Text { get; set; }
     public string WebHookUrl { get; set; }
     public string Username { get; set; }
@@ -31,17 +37,24 @@ public static class Request
     public static Response SendMessage(Message message)
     {
         Uri webHookUri;
-        if (!Uri.TryCreate(message.WebHookUrl, UriKind.RelativeOrAbsolute, out webHookUri))
-            return new Response(true, "You must send a valid url to the WebHookUrl!"); 
-
-        using (var request = new HttpRequestMessage(HttpMethod.Post, message.WebHookUrl))
+        try
         {
-            var requestBody = JsonSerializer.Serialize(new { text = message.Text, username = message.Username, response_type = "ephemeral", channel = message.Channel });
-            request.Content = new StringContent(requestBody, Encoding.UTF8, MEDIATYPE);
-            var response = _client.SendAsync(request).GetAwaiter().GetResult();
-            var responseString = response.Content.ReadAsStringAsync();
+            if (!Uri.TryCreate(message.WebHookUrl, UriKind.RelativeOrAbsolute, out webHookUri))
+                return new Response(true, "You must send a valid url to the WebHookUrl!"); 
 
-            return new Response(!responseString.IsCompletedSuccessfully, responseString.Result);
+            using (var request = new HttpRequestMessage(HttpMethod.Post, message.WebHookUrl))
+            {
+                var requestBody = JsonSerializer.Serialize(new { text = message.Text, username = message.Username, response_type = "ephemeral", channel = message.Channel });
+                request.Content = new StringContent(requestBody, Encoding.UTF8, MEDIATYPE);
+                var response = _client.SendAsync(request).GetAwaiter().GetResult();
+                var responseString = response.Content.ReadAsStringAsync();
+
+                return new Response(!responseString.IsCompletedSuccessfully, responseString.Result);
+            }
+        }
+        catch(Exception ex)
+        {
+            return new Response(true, $"Exception throwded: {ex.Message}");
         }
     }
 }
