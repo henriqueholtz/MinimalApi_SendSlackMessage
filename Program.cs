@@ -21,7 +21,8 @@ app.MapGet("/", (IConfiguration Configuration) =>
         Message = "Welcome to SendSlackMessage - The Minimal Api from dotnet 6!", 
         OSDescription = System.Runtime.InteropServices.RuntimeInformation.OSDescription,
         Test = Configuration["test"],
-        EnalbeSwagger = swagger
+        EnalbeSwagger = swagger,
+        Environment = builder.Environment.EnvironmentName
     };
 });
 
