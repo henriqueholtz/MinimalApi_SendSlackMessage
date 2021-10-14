@@ -11,3 +11,5 @@ A minimalApi with .net 6 to send a slack message with POST request
 * :heavy_check_mark: **EnvironmentName**
 * :heavy_check_mark: **OSDescription**
 * :heavy_check_mark: **[POST] endpoint to send Slack message (WebHook)**
+* :heavy_check_mark: **Docker (Linux)**
+* :heavy_check_mark: **Docker-compose (to Heroku)**
